@@ -113,9 +113,9 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
     TH2F* h2CPtargetPosition=new TH2F("h2CPtargetPosition","Origin point for particles from primaty vertex",100,1,-1,100,1,-1); 
     
     TCanvas* cMassLambda=new TCanvas("cMassLambda","Reconstructed lambda mass");
-    int immin=800;
-    int immax=2000;
-    int imres=1000;
+    int immin=1050;
+    int immax=1200;
+    int imres=150;
     TH1F* hMLAll=new TH1F("hMLAll","reconstraced mass of all particles combination",imres,immin,immax);
     TH1F* hMLPiHades=new TH1F("hMLPiHades","reconstraced mass of all combination, pion in HADES",imres,immin,immax);
     TH1F* hMLDist=new TH1F("hMLDist","Pion in Hades, distance between tracks <x",imres,immin,immax);
@@ -163,10 +163,13 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
     TH2F* h2PKall=new TH2F("h2PKHall", "kinematics for all particles from primary vertex",500,0,3500,500,0,35);
     TH2F* h2PKpionpion=new TH2F("h2PKpionpion","kinematics for pion",500,0,3500,500,0,90);
 
+    immin=1200;
+    immax=1400;
+    imres=200;
     TCanvas* cKsi=new TCanvas("cKsi","Ksi- measurment");
-    TH1F* hKmassall=new TH1F("hKmassall","Mass reconstructed from lambda and pion",600,1000,1600);
+    TH1F* hKmassall=new TH1F("hKmassall","Mass reconstructed from lambda and pion",imres,immin,immax);
     TH1F* hKdistanceall=new TH1F("hKdistanceall","disyance between lambda and all pions",400,1,-1);
-    TH1F* hKmassdist=new TH1F("hKmassdist","Mass reconstructed from lambda and pion, dist <x",600,1000,1600);
+    TH1F* hKmassdist=new TH1F("hKmassdist","Mass reconstructed from lambda and pion, dist <x",imres,immin,immax);
     TH1F* hKvertexdist=new TH1F("hKvertexdist","Distance between ksi and lambda vertex",250,-150,200);
     TH1F* hKtofproperties=new TH1F("hKtofproperties","value of fTofRec for events from ksi peak",5,0,5);
     TH1F* hKtofHitInd=new TH1F("hKtofHitInd","value of fTofHitInd for events from ksi peak",10,1,-1);
@@ -314,7 +317,7 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 	  {
 	    fwdetstrawvec=HCategoryManager::getObject(fwdetstrawvec, fCatFwDetCandSim, j);
 	    Int_t vectorcandID=-1;
-	    Int_t vectorcandTID=fwdetstrawvec->getTrack();
+	    Int_t vectorcandTID=fwdetstrawvec->getGeantTrack();
 	    Int_t vectorcandparentTID=-1;
 	    Int_t vectorcandparentID=-1;
 	    Int_t vectorcand_creationID=-1;
@@ -649,6 +652,8 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
     hMLDist->Draw();
     cMassLambda->cd(4);
     hMLDistSel->Draw();
+    hMLAll->Write();
+    hMLDist->Write();
 
     cIntersection->Divide(2,2);
     cIntersection->cd(1);
@@ -730,6 +735,8 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
     hKmassdist->Draw();
     cKsi->cd(4);
     hKvertexdist->Draw();
+    hKmassall->Write();
+    hKmassdist->Write();
 
     cParticlesDiff->Divide(2,2);
     cParticlesDiff->cd(1);
