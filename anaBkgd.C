@@ -6,19 +6,23 @@ void anaBkgd(){
     THStack *hLmass_sc = new THStack(); //scaled with cr_sec
     THStack *hXmass_sc = new THStack(); //scaled with cr_sec
 
-    TLegend *lL = new TLegend(.15, .65, .4, .9);
-    TLegend *lX = new TLegend(.15, .65, .4, .9);
-    TLegend *lLsc = new TLegend(.15, .65, .4, .9);
-    TLegend *lXsc = new TLegend(.15, .65, .4, .9);
-    lL -> SetFillColor(kWhite);
+    TLegend *lL = new TLegend(.15, .6, .25, .85);
+    TLegend *lX = new TLegend(.15, .6, .25, .85);
+    TLegend *lLsc = new TLegend(.15, .6, .25, .85);
+    TLegend *lXsc = new TLegend(.15, .6, .25, .85);
+    lL -> SetFillStyle(0);
     lL -> SetBorderSize(0);
-    lX -> SetFillColor(kWhite);
+    lL -> SetTextSize(.04);
+    lX -> SetFillStyle(0);
     lX -> SetBorderSize(0);
-    lLsc -> SetFillColor(kWhite);
+    lX -> SetTextSize(.04);
+    lLsc -> SetFillStyle(0);
     lLsc -> SetBorderSize(0);
-    lXsc -> SetFillColor(kWhite);
+    lLsc -> SetTextSize(.04);
+    lXsc -> SetFillStyle(0);
     lXsc -> SetBorderSize(0);
-     
+    lXsc -> SetTextSize(.04);
+	 
     TPaveText *pt1 = new TPaveText(.2, .7, .3, .85, "NDC");
     pt1 -> SetFillColor(0);
     pt1 -> SetBorderSize(0);
@@ -35,12 +39,18 @@ void anaBkgd(){
     char chanNo[64];
     int chan[] = {90, 10, 21, 22, 23, 62, 100};
     Double_t cr_sec[] = {4.8, 600., 100., 30., 20., 30., 20.};
-    string reac[] = {"#Xi^{-}K^{+}K^{+}p", "pp2#pi^{+}2#pi^{-}", "p#LambdaK^{0}_{s}#pi^{+}", "n#LambdaK^{0}_{s}2#pi^{+}", "p#Sigma^{0}K^{0}_{s}#pi^{+}", "p#LambdaK^{+}#pi^{+}#pi^{-}", "ppK^{0}_{s}K^{0}_{s}"}
+    string reac[] = {"#Xi^{-}K^{+}K^{+}p",
+		     "pp2#pi^{+}2#pi^{-}",
+		     "p#LambdaK^{0}_{s}#pi^{+}",
+		     "p#LambdaK^{+}#pi^{+}#pi^{-}",
+		     "n#LambdaK^{0}_{s}2#pi^{+}",
+		     "p#Sigma^{0}K^{0}_{s}#pi^{+}",
+		     "ppK^{0}_{s}K^{0}_{s}"}
     
-    TCanvas *c1 = new TCanvas("c1", "All channels - Lambda(1115) & Ksi mass");
+    TCanvas *c1 = new TCanvas("c1", "All channels - Lambda(1115) & Ksi mass", 2200, 1000);
     c1 -> Divide(7,3);
     gStyle -> SetOptStat(0);
-    TCanvas *c2 = new TCanvas("c2", "Xi & Lambda mass --- before and after cuts and scaling");
+    TCanvas *c2 = new TCanvas("c2", "Xi & Lambda mass --- before and after cuts and scaling", 2200, 1000);
     c2 -> Divide(2,2);
     
     for(int i = 0; i < 7; i++){
@@ -55,10 +65,14 @@ void anaBkgd(){
 	
 	TH1F *clLambda, *clXi, *clLambdaDist, *clXiDist;
 
-	hLambda -> SetLineColor(i+1);
-	hXi -> SetLineColor(i+1);
-	hLambdaDist -> SetLineColor(i+1);
-	hXiDist -> SetLineColor(i+1);
+	int col = i+1;
+	if(i == 2) col = 8;
+	if(i == 4) col = 42;
+	if(i == 6) col = 9;
+	hLambda -> SetLineColor(col);
+	hXi -> SetLineColor(col);
+	hLambdaDist -> SetLineColor(col);
+	hXiDist -> SetLineColor(col);
 	if(i == 0){
 	    hLambda -> SetLineWidth(2);	
 	    hXi -> SetLineWidth(2);
@@ -95,12 +109,13 @@ void anaBkgd(){
 	clLambdaDist = (TH1F*)hLambdaDist -> Clone();
 	clXiDist = (TH1F*)hXiDist -> Clone();
 	
-	clLambda -> Scale(cr_sec[i]);
+	clLambdaDist -> Scale(cr_sec[i]);
 	clXiDist -> Scale(cr_sec[i]);
 
-	int cnt = hXiDist -> Integral();
+	int cnt = hXi -> Integral();
+	int cnt_dist = hXiDist -> Integral();
 	int cnt_scale = clXiDist -> Integral();
-	printf("chann: %03d, cr_sec: %.02f, counts: %d, scale: %d\n", chan[i], cr_sec[i], cnt, cnt_scale);
+	printf("chann: %03d, cr_sec: %.02f, counts: %d, counts_dist: %d, scale: %d\n", chan[i], cr_sec[i], cnt, cnt_dist, cnt_scale);
 
 	hLmass -> Add(hLambda);
 	hXmass -> Add(hXi);
@@ -122,7 +137,7 @@ void anaBkgd(){
     lL -> Draw("same");
 */
 
-    TCanvas *cX = new TCanvas("cXi", "Reconstruction of #Xi^{-}");
+    TCanvas *cX = new TCanvas("cXi", "Reconstruction of #Xi^{-}", 1000, 600);
     cX -> cd();
     hXmass_sc -> Draw("nostack");
     hXmass_sc -> SetTitle("#Xi^{-} mass reconstruction");
@@ -163,4 +178,13 @@ void anaBkgd(){
     c2 -> Modified();
     lXsc -> Draw("same");
 
+    TFile *f = new TFile("out_anaBkgd.root", "RECREATE");
+    cX -> Write();
+    c1 -> Write();
+    c2 -> Write();
+    f -> Close();
+/*
+    cX -> SaveAs("xiMass.eps");
+    c1 -> SaveAs("massSpec.eps");
+    c2 -> SaveAs("xiLRec.eps");*/
 }

@@ -141,7 +141,12 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
     TH1F* hVRradialSel=new TH1F("hVRradialSel","Resolution for radial coordinate",200,-50,200);
     TH1F* hVRzSel=new TH1F("hVRzSel","Resolution for z coordinate",150,-300,300);
 
-
+    TH2F* hVertexXZL = new TH2F("hVertexXZL", "Lambda vertex reconstruction", 150, 0, 500, 150, -50, 50);
+    TH1F* hVertexXZLproj = new TH1F("hVertexXZLproj", "Lambda vertex_z reconstruction", 150, -100, 500);
+    TH2F* hVertexXZX = new TH2F("hVertexXZX", "Xi vertex reconstruction", 150, 0, 500, 150, -50, 50);
+    TH1F* hVertexXZXproj = new TH1F("hVertexXZXproj", "Xi vertex_z reconstruction", 150, -100, 500);
+    
+    
     TCanvas* cVertexResInZ=new TCanvas("cVertexResInZ","Resolution along Z in function of Z");
     TH1F* hVRIZ [7];
     TF1* fVRIZgaus[7];
@@ -211,6 +216,8 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 
     TH1I* hHmoduls=new TH1I("hHmoduls","how many moduls for track was used",5,0,5); 
     TH1I* hHNDetector=new TH1I("hHNDetector","value of getNDetector for pions from Xi peak",100,1,100);
+    TH1F* hKmassvert=new TH1F("hKmassvert","Mass reconstructed from lambda and pion --- vertex cut",imres,immin,immax);
+    TH1F* hKvertexvert=new TH1F("hKvertexvert","Distance between ksi and lambda vertex - vert",250,-150,200);
 
     //event loop *************************************************
     //*********************************************************
@@ -382,6 +389,7 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 		Int_t particlecand_parentID=particlecand->getGeantParentPID();
 		Int_t particlecand_geanttrack=particlecand->getGeantTrack();
 		double max_distance=10;// !!
+		double cut_vertex_z=50;// !!
 
 		hHparticleID->Fill(hades_ID);
 		
@@ -414,6 +422,7 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 		
 		HGeomVector vertex;
 		vertex=particle_tool.calcVertexAnalytical(base_FW,dir_FW,base_H,dir_H);
+		Float_t vertex_x=vertex.X();
 		Float_t vertex_z=vertex.Z();
 		Float_t vertex_r=TMath::Sqrt(vertex.X()*vertex.X()+vertex.Y()*vertex.Y());
 		Float_t vertex_z_sim=particlecand->getGeantzVertex();
@@ -428,6 +437,8 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 		hTDRAll->Fill(vertex_z_sim-vertex_z);
 		hMLAll->Fill(mass);
 		nInsertAll++;//increase number of intersections
+
+	
 		
 		if(vectorcandID==14 && hades_ID==9)//Pion in Hades, proton in FW
 		  {
@@ -448,6 +459,8 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 		
 		if(particlecand->isFlagBit(kIsUsed) && distance<max_distance)//only the best tracks from HADES
 		  {
+		      hVertexXZL -> Fill(vertex_z, vertex_x);
+		      hVertexXZLproj -> Fill(vertex_z);
 		    hTDAllCh2->Fill(distance);
 		    hTDRAllCh2->Fill(vertex_z_sim-vertex_z);
 		    if(vectorcandID==14 && hades_ID ==9)
@@ -547,7 +560,7 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 			  //end of information about hits
 			  //end of not important part **********************
 			  
-			  if(distance_ksi<max_distance && ksicand->isFlagBit(kIsUsed))
+			  if(distance_ksi<max_distance && ksicand->isFlagBit(kIsUsed)) //cut on dist Lambda - pim
 			    {
 			      hKmassdist->Fill(ksiVector.M());
 			      HGeomVector vertex_ksi;
@@ -558,6 +571,9 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 			      hKtofHitInd->Fill(ksicand->getTofHitInd());
 			      hKtofHitInd->Fill(particlecand->getTofHitInd());
 
+			      hVertexXZX -> Fill(vertex_ksi.Z(), vertex_ksi.X());
+			      hVertexXZXproj -> Fill(vertex_ksi.Z());
+			      
 			      if(particlecand_parentID==18 && vectorcandparentID==18 && ksi_parentID==23)
 				hKpeakID->Fill(1);
 			      else
@@ -568,6 +584,16 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 			      
 			      hHNDetector->Fill(ksicand->getNDetector());
 			      hHNDetector->Fill(particlecand->getNDetector());
+			    }
+
+			   HGeomVector vertex_ksi1;
+			   vertex_ksi1=particle_tool.calcVertexAnalytical(base_lambda,dir_lambda,base_pion,dir_pion);
+			  if(vertex_ksi1 > cut_vertex_z && ksicand->isFlagBit(kIsUsed)) //cut on vertex_z
+			    {
+			      hKmassvert->Fill(ksiVector.M());
+			      
+			      hKvertexvert->Fill((vertex-vertex_ksi1).length()*TMath::Sign(1.0,vertex.Z()-vertex_ksi1.Z()));//distance between vertexes multyply by order of them (+ or -)
+
 			    }
 			}
 		    }
@@ -609,8 +635,23 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 	
     	
 
+    hVertexXZL -> Draw("colz");
+    hVertexXZL -> Write();
+    hVertexXZLproj -> Draw();
+    hVertexXZLproj -> Write();
+    hVertexXZX -> Draw("colz");
+    hVertexXZX -> Write();
+    hVertexXZXproj -> Draw();
+    hVertexXZXproj -> Write();
+    hKLVertexZRec -> Draw();
+    hKLVertexZRec -> Write();
 
-
+    hKmassvert -> Draw(); 
+    hKmassvert -> Write();
+    hKvertexdist -> Draw();
+    hKvertexdist -> Write();
+    hKvertexvert -> Draw();
+    hKvertexvert -> Write();
 
     //draw all
     cTrackDistance->Divide(2,2);
