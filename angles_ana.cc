@@ -588,13 +588,13 @@ Int_t fwdet_tests(HLoop * loop, const AnaParameters & anapars)
 
 			   HGeomVector vertex_ksi1;
 			   vertex_ksi1=particle_tool.calcVertexAnalytical(base_lambda,dir_lambda,base_pion,dir_pion);
-			  if(vertex_ksi1 > cut_vertex_z && ksicand->isFlagBit(kIsUsed)) //cut on vertex_z
-			    {
-			      hKmassvert->Fill(ksiVector.M());
+			   if(vertex_ksi1.Z() > cut_vertex_z)// && ksicand->isFlagBit(kIsUsed)) //cut on vertex_z
+			   {
+			       hKmassvert->Fill(ksiVector.M());
 			      
-			      hKvertexvert->Fill((vertex-vertex_ksi1).length()*TMath::Sign(1.0,vertex.Z()-vertex_ksi1.Z()));//distance between vertexes multyply by order of them (+ or -)
+			       hKvertexvert->Fill((vertex-vertex_ksi1).length()*TMath::Sign(1.0,vertex.Z()-vertex_ksi1.Z()));//distance between vertexes multyply by order of them (+ or -)
 
-			    }
+			   }
 			}
 		    }
 		}
